@@ -42,5 +42,5 @@ python3 weather_time_render.py
 4. 根据需求设置cron、开机自启动start脚本
 
 ## 成品预览
-![the clock](https://raw.github.com/uniartisan/epaper_clock/master/pic/preview.jpg)
+![the clock](https://raw.githubusercontent.com/uniartisan/epaper_clock_4.2/master/pic/preview.jpg)
 
