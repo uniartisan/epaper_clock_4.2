@@ -25,7 +25,7 @@ sudo pip3 install requests lxml
 sudo apt install git build-essential python3-dev
 git clone https://github.com/adafruit/Adafruit_Python_DHT.git
 cd Adafruit_Python_DHT
-sudo python ./setup.py install
+sudo python3 ./setup.py install
 ```
 3. 运行程序
 ```bash
