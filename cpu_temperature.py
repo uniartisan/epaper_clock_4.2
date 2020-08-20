@@ -26,7 +26,8 @@ mem_per = 100*(mem_used / mem_all)
 # result = {'cpu_temp': float('%.1f' % cpu_temp), 'gpu_temp': float(
 #     '%.1f' % gpu_temp), 'update': int(time.time())}
 
-result = {'cpu_temp': float('%.1f' % cpu_temp),'mem_per':float('%.1f' % mem_per),  'update': int(time.time())}
+result = {'cpu_temp': float('%.1f' % cpu_temp), 'mem_per': float(
+    '%.1f' % mem_per),  'update': int(time.time())}
 
 # 写入文件
 data_file = os.path.join(os.path.dirname(

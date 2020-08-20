@@ -10,10 +10,13 @@ from lxml import etree
 output_file = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'weather.json')
 
+
 def fail_exit(msg):
     with open(output_file, 'w') as out_file:
         json.dump({'error': msg}, out_file)
     sys.exit(1)
+
+
 html = ''
 header = {
     "Host": 'www.tianqi.com',
@@ -23,10 +26,10 @@ header = {
 try:
     with open('location.json')as loc:
         loca = loc.readline()
-        if len(loca)==0:
+        if len(loca) == 0:
             address = 'https://www.tianqi.com/xian/'
         else:
-            address = 'https://www.tianqi.com/'+ loca +'/'
+            address = 'https://www.tianqi.com/' + loca + '/'
     r = requests.get(address, timeout=10, headers=header)
     r.encoding = 'utf-8'
     html = r.text
@@ -45,25 +48,26 @@ if rt:
     result['current_temp'] = rt[0].text.replace(u'℃', '')
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[3]/span/b')
 if rt:
-    result['current_weather']=rt[0].text
+    result['current_weather'] = rt[0].text
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[4]/b[1]')
 if rt:
-    result['current_humidity']=rt[0].text.replace(u'%', '').replace(u'湿度：','')
+    result['current_humidity'] = rt[0].text.replace(
+        u'%', '').replace(u'湿度：', '')
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[4]/b[2]')
 if rt:
-    result['current_wind']=rt[0].text.replace(u'风向：','')
+    result['current_wind'] = rt[0].text.replace(u'风向：', '')
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[5]/h5')
 if rt:
-    result['current_air']=rt[0].text.replace(u'空气质量：','')
+    result['current_air'] = rt[0].text.replace(u'空气质量：', '')
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[5]/h6')
 if rt:
-    result['current_air_num']=rt[0].text.replace(u'PM: ','')
+    result['current_air_num'] = rt[0].text.replace(u'PM: ', '')
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[3]/span/text()')
 if rt:
-    result['today_weather']=rt[0].replace(u' ~ ','-').replace(u'℃','')
+    result['today_weather'] = rt[0].replace(u' ~ ', '-').replace(u'℃', '')
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[4]/b[3]')
 if rt:
-    result['today_uv']=rt[0].text.replace(u'紫外线：','')
+    result['today_uv'] = rt[0].text.replace(u'紫外线：', '')
 #print(result)
 
 keys_require = '''city_name current_temp current_weather 

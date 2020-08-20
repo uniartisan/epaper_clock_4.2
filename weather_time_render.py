@@ -14,12 +14,14 @@ libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
 if os.path.exists(libdir):
     sys.path.append(libdir)
 
+
 def isConnected():
     try:
-        html = requests.get("https://www.baidu.com",timeout=2)
+        html = requests.get("https://www.baidu.com", timeout=2)
     except:
         return False
     return True
+
 
 try:
 
@@ -36,7 +38,9 @@ try:
     clock_x = 40
     clock_y = 40
     temp_x = 0
-    hour_flag = 0;date_flag = 0;net_work_flag=0
+    hour_flag = 0
+    date_flag = 0
+    net_work_flag = 0
     time_now = datetime.datetime.now()
     time_string = time_now.strftime('%H:%M')
     date_string = time_now.strftime('%Y-%m-%d')
@@ -93,14 +97,14 @@ try:
             cpu_data = json.load(f)
         cpu_tem = cpu_data['cpu_temp']
         ram_per = cpu_data['mem_per']
-        if float(cpu_tem) <= 50 :
+        if float(cpu_tem) <= 50:
             drawblack.text((5, 275), 'CPU 温度：'+str(cpu_tem) +
                            ' 摄氏度', font=font18, fill=0)
         else:
             drawyellow.text((5, 275), 'CPU 温度：'+str(cpu_tem) +
                             ' 摄氏度', font=font18, fill=0)
         drawblack.text((215, 275), 'RAM 使用率：'+str(ram_per) +
-                           ' %', font=font18, fill=0)
+                       ' %', font=font18, fill=0)
     else:
         if datetime.datetime.now().hour < 6:
             if datetime.datetime.now().hour == 1:
@@ -117,11 +121,11 @@ try:
     weather_data_file = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'weather.json')
     wdata = {}
-    
+
     # 检测网络情况
-    while net_work_flag==0:
-        net_work_flag=isConnected()
-        if net_work_flag==0:
+    while net_work_flag == 0:
+        net_work_flag = isConnected()
+        if net_work_flag == 0:
             drawyellow.text((20, 50), 'ERROR:', font=font48, fill=0)
             drawyellow.text((50, 110), '好像失去了网络连接…', font=font24, fill=0)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
@@ -175,31 +179,33 @@ try:
             today_uv = wdata['today_uv']
             drawblack.text((190, 50), str(city_name)+'：', font=font16, fill=0)
             if 10 < float(current_temp) < 35:
-                drawblack.text((250, 60), str(current_temp)+'度', font=font48, fill=0)
+                drawblack.text((250, 60), str(current_temp) +
+                               '度', font=font48, fill=0)
             else:
-                drawyellow.text((250, 60), str(current_temp)+'度', font=font48, fill=0)
-            drawblack.text((220, 125), '今日气温 ' + str(today_weather) + ' 度', font=font18, fill=0)
-            drawblack.text((220, 155), str(current_weather) + ' ' + str(current_wind), font=font18, fill=0)
+                drawyellow.text((250, 60), str(current_temp) +
+                                '度', font=font48, fill=0)
+            drawblack.text((220, 125), '今日气温 ' +
+                           str(today_weather) + ' 度', font=font18, fill=0)
+            drawblack.text((220, 155), str(current_weather) +
+                           ' ' + str(current_wind), font=font18, fill=0)
             drawblack.text((220, 185), '相对湿度 ' +
-                        str(current_humidity) + '%', font=font18, fill=0)
-            
+                           str(current_humidity) + '%', font=font18, fill=0)
+
             # 空气指数
             if current_air == '优' or current_air == '良':
                 drawblack.text((80, 215), 'PM指数:' +
-                        str(current_air), font=font16, fill=0)
+                               str(current_air), font=font16, fill=0)
             else:
                 drawyellow.text((80, 215), 'PM指数:' +
-                        str(current_air), font=font16, fill=0)
+                                str(current_air), font=font16, fill=0)
 
             # 紫外线强度
             if u'强' in str(today_uv):
                 drawyellow.text((230, 215), 'UV强度:' +
-                        str(today_uv), font=font16, fill=0)
+                                str(today_uv), font=font16, fill=0)
             else:
                 drawblack.text((230, 215), 'UV强度:' +
-                        str(today_uv), font=font16, fill=0)
-
-    
+                               str(today_uv), font=font16, fill=0)
 
     # 一言 或 纪念日
      # date_check = time_now.strftime('%m-%d')
@@ -233,6 +239,3 @@ except IOError as e:
 except KeyboardInterrupt:
     epd.sleep()
     exit()
-
-
-
