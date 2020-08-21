@@ -68,7 +68,7 @@ if rt:
 rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[4]/b[3]')
 if rt:
     result['today_uv'] = rt[0].text.replace(u'紫外线：', '')
-#print(result)
+# print(result)
 
 keys_require = '''city_name current_temp current_weather 
     current_wind current_humidity today_weather current_air current_air_num today_uv'''.split()
@@ -80,4 +80,4 @@ for key in keys_require:
 
 result['update'] = int(time.time())
 with open(output_file, 'w') as out_file:
-    json.dump(result, out_file, ensure_ascii=False)
+    json.dump(result, out_file, ensure_ascii=False, indent=4)
