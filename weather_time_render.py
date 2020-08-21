@@ -219,14 +219,14 @@ try:
     #     hitokoto = 'xxx'
     # else:
 
-    url = 'https://v1.hitokoto.cn/?max_length=23&json'
+    url = 'https://v1.hitokoto.cn/?max_length=22&json'
     response = requests.get(url=url)
     content = response.content
     result = json.loads(content)
     hitokoto = str(result['hitokoto'])
 
     # 居中效果
-    hitokoto = ' '*4*int((22-len(hitokoto))/2)+hitokoto
+    hitokoto = ' '*4*int((23-len(hitokoto))/2)+hitokoto
     drawblack.text((0, 240), str(hitokoto), font=font18, fill=0)
 
     # 显示并休眠
