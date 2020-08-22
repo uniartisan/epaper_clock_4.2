@@ -22,35 +22,43 @@ def isConnected():
         return False
     return True
 
+
 def kill_if_exit():
     r = os.popen(
         'ps -ef | grep "/usr/bin/python3.7m /home/pi/raspberryPi-gift/weather_time_render.py" | grep -v grep | awk \'{print $2}\'')
     info = r.readline()
     pid = 0
-    if len(info) == 4:
+    if len(info) > 2:
         pid = info[0]
         pid2 = info[1]
-        pid = int(pid);pid2 = int(pid2)
-        os.system('sudo kill %s %s' % (pid,pid2))
+        pid = int(pid)
+        pid2 = int(pid2)
+        os.system('sudo kill %s %s' % (pid, pid2))
+        print('kill suceess')
 
     if pid != 0:
         return 1
     else:
         return 0
 
+
 def get_all_data():
     os.system('python3 tianqi.py')
     os.system('python3 cpu_temperature.py')
+    time.sleep(5)
+
 
 def weather_retry():
     os.system('python3 tianqi.py')
+    print('fail to get weather data, waiting for 120 secs')
     time.sleep(120)
+
 
 try:
     if kill_if_exit():
-        time.sleep(10)
+        time.sleep(60)
     get_all_data()
-    
+
     epd = epd4in2bc.EPD()
     epd.init()
 
@@ -135,8 +143,10 @@ try:
     while net_work_flag == 0:
         net_work_flag = isConnected()
         if net_work_flag == 0:
-            drawyellow.text((20, 50), 'ERROR:', font=font48, fill=net_work_flag)
-            drawyellow.text((50, 110), '好像失去了网络连接…', font=font24, fill=net_work_flag)
+            drawyellow.text((20, 50), 'ERROR:',
+                            font=font48, fill=net_work_flag)
+            drawyellow.text((50, 110), '好像失去了网络连接…',
+                            font=font24, fill=net_work_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
             time.sleep(180)
 
@@ -161,7 +171,6 @@ try:
             weather_retry()
         else:
             weather_flag = 1
-        
 
     for i in range(50, 150):
         drawyellow.line((0, i, 400, i), fill=1)
@@ -231,7 +240,7 @@ try:
     else:
         drawblack.text((230, 215), 'UV强度:' +
                        str(today_uv), font=font16, fill=0)
-                       
+                      
     # 一言 或 纪念日
      # date_check = time_now.strftime('%m-%d')
     # if date_check == '01-01':
