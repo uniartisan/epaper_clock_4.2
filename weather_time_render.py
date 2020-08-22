@@ -22,9 +22,35 @@ def isConnected():
         return False
     return True
 
+def kill_if_exit():
+    r = os.popen(
+        'ps -ef | grep "/usr/bin/python3.7m /home/pi/raspberryPi-gift/weather_time_render.py" | grep -v grep | awk \'{print $2}\'')
+    info = r.readline()
+    pid = 0
+    if len(info) == 4:
+        pid = info[0]
+        pid2 = info[1]
+        pid = int(pid);pid2 = int(pid2)
+        os.system('sudo kill %s %s' % (pid,pid2))
+
+    if pid != 0:
+        return 1
+    else:
+        return 0
+
+def get_all_data():
+    os.system('python3 tianqi.py')
+    os.system('python3 cpu_temperature.py')
+
+def weather_retry():
+    os.system('python3 tianqi.py')
+    time.sleep(120)
 
 try:
-
+    if kill_if_exit():
+        time.sleep(10)
+    get_all_data()
+    
     epd = epd4in2bc.EPD()
     epd.init()
 
@@ -71,7 +97,6 @@ try:
     if hour_flag == 0:
         drawblack.text((240, 0), str(hour_now) +
                        hour_mes, font=font24, fill=0)
-        epd.Clear()
     else:
         drawyellow.text((240, 0), str(hour_now) +
                         hour_mes, font=font24, fill=0)
@@ -98,7 +123,7 @@ try:
             if datetime.datetime.now().hour == 1:
                 drawyellow.text((20, 275), '这是一个彩蛋~还不睡！！', font=font18, fill=0)
             elif datetime.datetime.now().hour == 0:
-                drawblack.text((20, 275), '我好爱你 (*/ω＼*)', font=font18, fill=0)
+                drawblack.text((20, 275), '咋还没有睡觉~', font=font18, fill=0)
             else:
                 drawblack.text((20, 275), '让我康康是哪个小孩子还没睡觉~',
                                font=font18, fill=0)
@@ -110,16 +135,13 @@ try:
     while net_work_flag == 0:
         net_work_flag = isConnected()
         if net_work_flag == 0:
-            drawyellow.text((20, 50), 'ERROR:', font=font48, fill=0)
-            drawyellow.text((50, 110), '好像失去了网络连接…', font=font24, fill=0)
+            drawyellow.text((20, 50), 'ERROR:', font=font48, fill=net_work_flag)
+            drawyellow.text((50, 110), '好像失去了网络连接…', font=font24, fill=net_work_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
             time.sleep(180)
-        else:
-            drawyellow.text((20, 50), 'ERROR:', font=font48, fill=1)
-            drawyellow.text((50, 110), '好像失去了网络连接…', font=font24, fill=1)
 
     # 读取天气信息
-    while(weather_flag == 0):
+    while weather_flag == 0:
         weather_data_file = os.path.join(os.path.dirname(
             os.path.abspath(__file__)), 'weather.json')
         wdata = {}
@@ -130,17 +152,19 @@ try:
             drawyellow.text((50, 110), '无法加载天气数据!',
                             font=font24, fill=weather_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
+            weather_retry()
         elif int(time.time()) - wdata['update'] > 2 * 3600:
             drawyellow.text((20, 50), 'ERROR:', font=font48, fill=weather_flag)
             drawyellow.text((50, 110), '天气数据过期!',
                             font=font24, fill=weather_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
+            weather_retry()
         else:
             weather_flag = 1
-            for i in range(50, 150):
-                drawyellow.line((0, i, 400, i), fill=1)
-        os.system('python3 tianqi.py')
-        time.sleep(10)
+        
+
+    for i in range(50, 150):
+        drawyellow.line((0, i, 400, i), fill=1)
 
     cw = wdata['current_weather']
     bmp_name = {u'晴': 'WQING.BMP', u'阴': 'WYIN.BMP', u'多云': 'WDYZQ.BMP',
