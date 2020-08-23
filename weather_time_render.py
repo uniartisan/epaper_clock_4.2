@@ -24,16 +24,15 @@ def isConnected():
 
 
 def kill_if_exit():
+    info = []
     r = os.popen(
-        'ps -ef | grep "/usr/bin/python3.7m /home/pi/raspberryPi-gift/weather_time_render.py" | grep -v grep | awk \'{print $2}\'')
-    info = r.readline()
+        'ps -ef | grep "weather_time_render.py" | grep -v grep | awk \'{print $2}\'')
+    info = r.readlines()
     pid = 0
     if len(info) > 2:
-        pid = info[0]
-        pid2 = info[1]
-        pid = int(pid)
-        pid2 = int(pid2)
-        os.system('sudo kill %s %s' % (pid, pid2))
+        for i in range (0,len(info)-1):
+            pid = info[i]
+            os.system('sudo kill %s' % (pid))
         print('kill suceess')
 
     if pid != 0:
@@ -43,15 +42,15 @@ def kill_if_exit():
 
 
 def get_all_data():
-    os.system('python3 tianqi.py')
-    os.system('python3 cpu_temperature.py')
+    os.system('/usr/bin/python3.7m /home/pi/raspberryPi-gift/tianqi.py')
+    os.system('/usr/bin/python3.7m /home/pi/raspberryPi-gift/cpu_temperature.py')
     time.sleep(5)
 
 
 def weather_retry():
-    os.system('python3 tianqi.py')
-    print('fail to get weather data, waiting for 120 secs')
-    time.sleep(120)
+    os.system('/usr/bin/python3.7m /home/pi/raspberryPi-gift/tianqi.py')
+    print('fail to get weather data, waiting for 80 secs')
+    time.sleep(80)
 
 
 try:
@@ -197,7 +196,7 @@ try:
     if bmp_name == 'WQING.BMP' or bmp_name == 'WDYZQ.BMP' or bmp_name == 'WYIN.BMP':
         HBlackimage.paste(newimage, (25, 55))
     else:
-        HRYimage.paste(newimage, (25, 55))
+        HRYimage.paste(newimage, (25, 48))
 
     # 处理天气数据
     city_name = wdata['city_name']
