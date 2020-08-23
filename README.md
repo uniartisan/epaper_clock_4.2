@@ -34,8 +34,6 @@ cd epaper_clock_4.2
 ```
 在location.json文件并填入城市信息
 ```bash
-python3 tianqi.py
-python3 cpu_temperature.py
 python3 weather_time_render.py
 ```
 
