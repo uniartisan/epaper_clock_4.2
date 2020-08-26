@@ -8,7 +8,8 @@ import os
 import sys
 import time
 import requests
-
+from cpu_temperature import *
+from tianqi import *
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pic')
 libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
 if os.path.exists(libdir):
@@ -17,7 +18,7 @@ if os.path.exists(libdir):
 
 def isConnected():
     try:
-        html = requests.get("https://www.baidu.com", timeout=2)
+        html = requests.get("https://www.baidu.com", timeout=5)
     except:
         return False
     return True
@@ -30,7 +31,7 @@ def kill_if_exit():
     info = r.readlines()
     pid = 0
     if len(info) > 2:
-        for i in range (0,len(info)-1):
+        for i in range(0, len(info)-1):
             pid = info[i]
             os.system('sudo kill %s' % (pid))
         print('kill suceess')
@@ -42,13 +43,15 @@ def kill_if_exit():
 
 
 def get_all_data():
-    os.system('/usr/bin/python3.7m /home/pi/raspberryPi-gift/tianqi.py')
-    os.system('/usr/bin/python3.7m /home/pi/raspberryPi-gift/cpu_temperature.py')
+    success = False
+    while(success == False):
+        success = write_cpu()
+        success = write_tianqi()
     time.sleep(5)
 
 
 def weather_retry():
-    os.system('/usr/bin/python3.7m /home/pi/raspberryPi-gift/tianqi.py')
+    write_tianqi()
     print('fail to get weather data, waiting for 80 secs')
     time.sleep(80)
 
@@ -65,7 +68,13 @@ try:
     font16 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 16)
     font18 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 18)
     font24 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 24)
+    font26 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 26)
     font48 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 48)
+
+    HBlackimage = Image.new('1', (epd.width, epd.height), 255)
+    HRYimage = Image.new('1', (epd.width, epd.height), 255)
+    drawblack = ImageDraw.Draw(HBlackimage)
+    drawyellow = ImageDraw.Draw(HRYimage)
 
     hour_flag = 0
     date_flag = 0
@@ -76,18 +85,13 @@ try:
     week_string = [u'星期一', u'星期二', u'星期三', u'星期四',
                    u'星期五', u'星期六', u'星期日'][time_now.isoweekday() - 1]
 
-    HBlackimage = Image.new('1', (epd.width, epd.height), 255)
-    HRYimage = Image.new('1', (epd.width, epd.height), 255)
-    drawblack = ImageDraw.Draw(HBlackimage)
-    drawyellow = ImageDraw.Draw(HRYimage)
-
     # 绘制边框线，输出日期信息
-    for i in range(29, 31):
+    for i in range(32, 34):
         drawblack.line((0, i, 400, i), fill=0)
     for i in range(269, 271):
         drawblack.line((0, i, 400, i), fill=0)
-    drawblack.text((10, 0), date_string, font=font24, fill=0)
-    drawblack.text((150, 0), week_string, font=font24, fill=0)
+    drawblack.text((10, 0), date_string, font=font26, fill=0)
+    drawblack.text((150, 0), week_string, font=font26, fill=0)
 
     hour_now = datetime.datetime.now().hour
     hour_mes = ' AM'
@@ -103,10 +107,10 @@ try:
 
     if hour_flag == 0:
         drawblack.text((240, 0), str(hour_now) +
-                       hour_mes, font=font24, fill=0)
+                       hour_mes, font=font26, fill=0)
     else:
         drawyellow.text((240, 0), str(hour_now) +
-                        hour_mes, font=font24, fill=0)
+                        hour_mes, font=font26, fill=0)
 
     if hour_flag == 0:
         # cpu 工作状况
@@ -145,7 +149,7 @@ try:
             drawyellow.text((20, 50), 'ERROR:',
                             font=font48, fill=net_work_flag)
             drawyellow.text((50, 110), '好像失去了网络连接…',
-                            font=font24, fill=net_work_flag)
+                            font=font26, fill=net_work_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
             time.sleep(180)
 
@@ -159,13 +163,13 @@ try:
         if 'error' in wdata:
             drawyellow.text((20, 50), 'ERROR:', font=font48, fill=weather_flag)
             drawyellow.text((50, 110), '无法加载天气数据!',
-                            font=font24, fill=weather_flag)
+                            font=font26, fill=weather_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
             weather_retry()
-        elif int(time.time()) - wdata['update'] > 2 * 3600:
+        elif int(time.time()) - wdata['update'] > 5 * 60:
             drawyellow.text((20, 50), 'ERROR:', font=font48, fill=weather_flag)
             drawyellow.text((50, 110), '天气数据过期!',
-                            font=font24, fill=weather_flag)
+                            font=font26, fill=weather_flag)
             epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
             weather_retry()
         else:
@@ -194,9 +198,9 @@ try:
     yellowimage1 = Image.new('1', (epd.width, epd.height), 255)
     newimage = Image.open(os.path.join(picdir, bmp_name))
     if bmp_name == 'WQING.BMP' or bmp_name == 'WDYZQ.BMP' or bmp_name == 'WYIN.BMP':
-        HBlackimage.paste(newimage, (25, 55))
+        HBlackimage.paste(newimage, (25, 52))
     else:
-        HRYimage.paste(newimage, (25, 48))
+        HRYimage.paste(newimage, (25, 46))
 
     # 处理天气数据
     city_name = wdata['city_name']
@@ -211,35 +215,31 @@ try:
 
     # 输出主要天气信息
     drawblack.text((190, 50), str(city_name)+'：', font=font16, fill=0)
-    if 10 < float(current_temp) < 35:
-        drawblack.text((250, 60), str(current_temp) +
+    if 10 < float(current_temp) < 30:
+        drawblack.text((250, 55), str(current_temp) +
                        '度', font=font48, fill=0)
     else:
-        drawyellow.text((250, 60), str(current_temp) +
+        drawyellow.text((250, 55), str(current_temp) +
                         '度', font=font48, fill=0)
-    drawblack.text((220, 125), '今日气温 ' +
+    drawblack.text((220, 120), '今日气温 ' +
                    str(today_weather) + ' 度', font=font18, fill=0)
-    drawblack.text((220, 155), str(current_weather) +
+    drawblack.text((220, 150), str(current_weather) +
                    ' ' + str(current_wind), font=font18, fill=0)
-    drawblack.text((220, 185), '相对湿度 ' +
+    drawblack.text((220, 180), '相对湿度 ' +
                    str(current_humidity) + '%', font=font18, fill=0)
 
     # 空气指数
-    if current_air == '优' or current_air == '良':
-        drawblack.text((80, 215), 'PM指数:' +
-                       str(current_air), font=font16, fill=0)
-    else:
-        drawyellow.text((80, 215), 'PM指数:' +
-                        str(current_air), font=font16, fill=0)
+    drawblack.text((80, 212), 'PM指数:' +
+                   str(current_air), font=font18, fill=0)
+    if current_air != '优' and current_air != '良':
+        drawyellow.rectangle((66, 216, 74, 228), fill=0)
 
     # 紫外线强度
+    drawblack.text((236, 212), 'UV强度:' +
+                   str(today_uv), font=font18, fill=0)
     if u'强' in str(today_uv):
-        drawyellow.text((230, 215), 'UV强度:' +
-                        str(today_uv), font=font16, fill=0)
-    else:
-        drawblack.text((230, 215), 'UV强度:' +
-                       str(today_uv), font=font16, fill=0)
-                      
+        drawyellow.rectangle((222, 216, 230, 228), fill=0)
+
     # 一言 或 纪念日
      # date_check = time_now.strftime('%m-%d')
     # if date_check == '01-01':
