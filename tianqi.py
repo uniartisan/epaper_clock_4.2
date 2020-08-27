@@ -36,7 +36,9 @@ def write_tianqi():
         html = r.text
 
         result = {field: None for field in '''city_name current_temp current_weather 
-            current_wind current_humidity today_weather current_air current_air_num today_uv'''.split()}
+            current_wind current_humidity today_weather current_air 
+            current_air_num today_uv tomorrow_weather tomorrow_temp_high
+            tomorrow_temp_low tomorrow_wind'''.split()}
         tree = etree.HTML(html)
         rt = tree.xpath('/html/body/div[5]/div/div[1]/dl/dd[1]/h2')
         if rt:
@@ -69,8 +71,25 @@ def write_tianqi():
             result['today_uv'] = rt[0].text.replace(u'紫外线：', '')
         #print(result)
 
+        # 获取第二天天气状态
+        rt = tree.xpath('/html/body/div[5]/div/div[2]/div[2]/ul[2]/li[2]')
+        if rt:
+            result['tomorrow_weather'] = rt[0].text
+        rt = tree.xpath(
+            '/html/body/div[5]/div/div[2]/div[2]/div/ul/li[2]/span')
+        if rt:
+            result['tomorrow_temp_high'] = rt[0].text
+        rt = tree.xpath('/html/body/div[5]/div/div[2]/div[2]/div/ul/li[2]/b')
+        if rt:
+            result['tomorrow_temp_low'] = rt[0].text
+        rt = tree.xpath('/html/body/div[5]/div/div[2]/div[2]/ul[3]/li[2]')
+        if rt:
+            result['tomorrow_wind'] = rt[0].text
+
         keys_require = '''city_name current_temp current_weather 
-            current_wind current_humidity today_weather current_air current_air_num today_uv'''.split()
+            current_wind current_humidity today_weather current_air 
+            current_air_num today_uv tomorrow_weather tomorrow_temp_high
+            tomorrow_temp_low tomorrow_wind'''.split()
 
         for key in keys_require:
             if not result.get(key):

@@ -30,7 +30,7 @@ def kill_if_exit():
         'ps -ef | grep "weather_time_render.py" | grep -v grep | awk \'{print $2}\'')
     info = r.readlines()
     pid = 0
-    if len(info) > 2:
+    if len(info) >= 2:
         for i in range(0, len(info)-1):
             pid = info[i]
             os.system('sudo kill %s' % (pid))
@@ -56,7 +56,19 @@ def weather_retry():
     time.sleep(80)
 
 
+def check_midnight():
+    hour = datetime.datetime.now().hour
+    if 1 <= hour < 6:
+        return 1
+    else:
+        return 0
+
+
 try:
+    # 午夜不刷新
+    if check_midnight():
+        exit()
+
     if kill_if_exit():
         time.sleep(60)
     get_all_data()
@@ -95,6 +107,8 @@ try:
 
     hour_now = datetime.datetime.now().hour
     hour_mes = ' AM'
+
+    # hour_flag 23~6点为1
     if hour_now < 6:
         hour_mes += '   凌晨'
         hour_flag = 1
@@ -105,12 +119,14 @@ try:
             hour_flag = 1
         hour_now -= 12
 
-    if hour_flag == 0:
+    if hour_flag == 0:      # 非深夜
         drawblack.text((240, 0), str(hour_now) +
                        hour_mes, font=font26, fill=0)
     else:
         drawyellow.text((240, 0), str(hour_now) +
                         hour_mes, font=font26, fill=0)
+    hour_now = datetime.datetime.now().hour     # 重新赋值为24小时制
+    # hour_now =23
 
     if hour_flag == 0:
         # cpu 工作状况
@@ -121,6 +137,7 @@ try:
             cpu_data = json.load(f)
         cpu_tem = cpu_data['cpu_temp']
         ram_per = cpu_data['mem_per']
+        # CPU 温度异常
         if float(cpu_tem) <= 50:
             drawblack.text((5, 275), 'CPU 温度：'+str(cpu_tem) +
                            ' 摄氏度', font=font18, fill=0)
@@ -129,7 +146,7 @@ try:
                             ' 摄氏度', font=font18, fill=0)
         drawblack.text((215, 275), 'RAM 使用率：'+str(ram_per) +
                        ' %', font=font18, fill=0)
-    else:
+    else:   # 深夜
         if datetime.datetime.now().hour < 6:
             if datetime.datetime.now().hour == 1:
                 drawyellow.text((20, 275), '这是一个彩蛋~还不睡！！', font=font18, fill=0)
@@ -178,7 +195,25 @@ try:
     for i in range(50, 150):
         drawyellow.line((0, i, 400, i), fill=1)
 
-    cw = wdata['current_weather']
+    # 处理天气数据
+    city_name = wdata['city_name']
+    today_weather = wdata['today_weather']
+    current_temp = wdata['current_temp']
+    current_weather = wdata['current_weather']
+    current_wind = wdata['current_wind']
+    current_humidity = wdata['current_humidity']
+    current_air = wdata['current_air']
+    current_air_num = wdata['current_air_num']
+    today_uv = wdata['today_uv']
+    tomorrow_weather = wdata['tomorrow_weather']
+    tomorrow_temp_high = wdata['tomorrow_temp_high']
+    tomorrow_temp_low = wdata['tomorrow_temp_low']
+    tomorrow_wind = wdata['tomorrow_wind']
+    if 22 <= hour_now < 24:
+        cw = tomorrow_weather
+    else:
+        cw = current_weather
+
     bmp_name = {u'晴': 'WQING.BMP', u'阴': 'WYIN.BMP', u'多云': 'WDYZQ.BMP',
                 u'雷阵雨': 'WLZYU.BMP', u'小雨': 'WXYU.BMP', u'中雨': 'WXYU.BMP'}.get(cw, None)
     if not bmp_name:
@@ -194,51 +229,75 @@ try:
             bmp_name = 'WDYZQ.BMP'
         elif u'雷' in cw:
             bmp_name = 'WLZYU.BMP'
+
     blackimage1 = Image.new('1', (epd.width, epd.height), 255)
     yellowimage1 = Image.new('1', (epd.width, epd.height), 255)
     newimage = Image.open(os.path.join(picdir, bmp_name))
     if bmp_name == 'WQING.BMP' or bmp_name == 'WDYZQ.BMP' or bmp_name == 'WYIN.BMP':
         HBlackimage.paste(newimage, (25, 52))
+        bad_weather = 0
     else:
         HRYimage.paste(newimage, (25, 46))
-
-    # 处理天气数据
-    city_name = wdata['city_name']
-    today_weather = wdata['today_weather']
-    current_temp = wdata['current_temp']
-    current_weather = wdata['current_weather']
-    current_wind = wdata['current_wind']
-    current_humidity = wdata['current_humidity']
-    current_air = wdata['current_air']
-    current_air_num = wdata['current_air_num']
-    today_uv = wdata['today_uv']
+        bad_weather = 1
 
     # 输出主要天气信息
-    drawblack.text((190, 50), str(city_name)+'：', font=font16, fill=0)
-    if 10 < float(current_temp) < 30:
-        drawblack.text((250, 55), str(current_temp) +
-                       '度', font=font48, fill=0)
+    if 22 <= hour_now < 24:
+        drawblack.text((190, 50), '明日：', font=font16, fill=0)
+        if bad_weather:
+            drawyellow.text((260, 55), str(
+                tomorrow_weather), font=font48, fill=0)
+        else:
+            drawblack.text((260, 55), str(
+                tomorrow_weather), font=font48, fill=0)
+        drawblack.text((220, 120), '最低气温：' +
+                       str(tomorrow_temp_low) + ' 度', font=font18, fill=0)
+        drawblack.text((220, 150), '最高气温：' +
+                       str(tomorrow_temp_high) + ' 度', font=font18, fill=0)
+        drawblack.text((220, 180), '明日将会是 ' +
+                       str(tomorrow_wind), font=font18, fill=0)
+        if int(tomorrow_temp_high)-int(tomorrow_temp_low) >= 12:
+            if u'雨' in tomorrow_weather:
+                message = '明日有异常天气，且温差较大'
+            else:
+                message = '明日的温差有些大，要注意穿衣哦~'
+        else:
+            if int(tomorrow_temp_high) >= 32:
+                message = '不妙，明天好像有点热欸'
+            if int(tomorrow_temp_low) <= 15:
+                message = '明天好像有点冷'
+            elif int(tomorrow_temp_low) <= 5 or u'雪' in tomorrow_weather or u'雨' in tomorrow_weather:
+                message = '明天的天气有些恶劣呢'
+            else:
+                message = '明天天气大概率还不错哦！'
+        message = ' '*4*int((23-len(message))/2)+message
+        drawblack.text((0, 212), str(message), font=font18, fill=0)
+
     else:
-        drawyellow.text((250, 55), str(current_temp) +
-                        '度', font=font48, fill=0)
-    drawblack.text((220, 120), '今日气温 ' +
-                   str(today_weather) + ' 度', font=font18, fill=0)
-    drawblack.text((220, 150), str(current_weather) +
-                   ' ' + str(current_wind), font=font18, fill=0)
-    drawblack.text((220, 180), '相对湿度 ' +
-                   str(current_humidity) + '%', font=font18, fill=0)
+        drawblack.text((190, 50), str(city_name)+'：', font=font16, fill=0)
+        if 10 < float(current_temp) < 30:
+            drawblack.text((250, 55), str(current_temp) +
+                           '度', font=font48, fill=0)
+        else:
+            drawyellow.text((250, 55), str(current_temp) +
+                            '度', font=font48, fill=0)
+        drawblack.text((220, 120), '今日气温 ' +
+                       str(today_weather) + ' 度', font=font18, fill=0)
+        drawblack.text((220, 150), str(current_weather) +
+                       ' ' + str(current_wind), font=font18, fill=0)
+        drawblack.text((220, 180), '相对湿度 ' +
+                       str(current_humidity) + '%', font=font18, fill=0)
 
-    # 空气指数
-    drawblack.text((80, 212), 'PM指数:' +
-                   str(current_air), font=font18, fill=0)
-    if current_air != '优' and current_air != '良':
-        drawyellow.rectangle((66, 216, 74, 228), fill=0)
+        # 空气指数
+        drawblack.text((80, 212), 'PM指数:' +
+                       str(current_air), font=font18, fill=0)
+        if current_air != '优' and current_air != '良':
+            drawyellow.rectangle((66, 216, 74, 228), fill=0)
 
-    # 紫外线强度
-    drawblack.text((236, 212), 'UV强度:' +
-                   str(today_uv), font=font18, fill=0)
-    if u'强' in str(today_uv):
-        drawyellow.rectangle((222, 216, 230, 228), fill=0)
+        # 紫外线强度
+        drawblack.text((236, 212), 'UV强度:' +
+                       str(today_uv), font=font18, fill=0)
+        if u'强' in str(today_uv):
+            drawyellow.rectangle((222, 216, 230, 228), fill=0)
 
     # 一言 或 纪念日
      # date_check = time_now.strftime('%m-%d')
