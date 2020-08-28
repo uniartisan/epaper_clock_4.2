@@ -67,7 +67,7 @@ def check_midnight():
 try:
     # 午夜不刷新
     if check_midnight():
-        exit()
+        sys.exit('Midnight:Skip')
 
     if kill_if_exit():
         time.sleep(60)
@@ -82,6 +82,7 @@ try:
     font24 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 24)
     font26 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 26)
     font48 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 48)
+    font54 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 54)
 
     HBlackimage = Image.new('1', (epd.width, epd.height), 255)
     HRYimage = Image.new('1', (epd.width, epd.height), 255)
@@ -96,6 +97,17 @@ try:
     date_string = time_now.strftime('%Y-%m-%d')
     week_string = [u'星期一', u'星期二', u'星期三', u'星期四',
                    u'星期五', u'星期六', u'星期日'][time_now.isoweekday() - 1]
+    
+    # 午夜页面
+    if time_now == 0:
+        drawblack.text((98, 90), '(*/ω＼*)', font=font54, fill=0)
+        drawyellow.text((110, 170), 'SLEEPING TIME', font=font26, fill=0)
+        message=date_string+' '+week_string
+        message = ' '*14+message
+        drawblack.text((0, 250), message, font=font26, fill=0)
+        epd.display(epd.getbuffer(HBlackimage), epd.getbuffer(HRYimage))
+        epd.sleep()
+        sys.exit('Midnight:Flash')
 
     # 绘制边框线，输出日期信息
     for i in range(32, 34):
