@@ -81,6 +81,8 @@ try:
     font18 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 18)
     font24 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 24)
     font26 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 26)
+    font30 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 30)
+    font36 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 36)
     font48 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 48)
     font54 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 54)
 
@@ -255,18 +257,31 @@ try:
     # 输出主要天气信息
     if 22 <= hour_now < 24:
         drawblack.text((190, 50), '明日：', font=font16, fill=0)
-        if bad_weather:
-            drawyellow.text((260, 55), str(
-                tomorrow_weather), font=font48, fill=0)
+        # 不同的明日天气不同显示
+        wether_lenth = len(tomorrow_weather)
+        if wether_lenth == 1:
+            message_x =255;message_y=55;fonts=font48
+        elif wether_lenth == 2:
+            message_x =252;message_y=55;fonts=font48
+        elif wether_lenth <= 4:
+            message_x =238;message_y=63;fonts=font36
         else:
-            drawblack.text((260, 55), str(
-                tomorrow_weather), font=font48, fill=0)
+            message_x =232;message_y=75;fonts=font30
+
+        if bad_weather:
+            drawyellow.text((message_x, message_y), str(
+                tomorrow_weather), font=fonts, fill=0)
+        else:
+            drawblack.text((message_x, message_y), str(
+                tomorrow_weather), font=fonts, fill=0)
+
         drawblack.text((220, 120), '最低气温：' +
                        str(tomorrow_temp_low) + ' 度', font=font18, fill=0)
         drawblack.text((220, 150), '最高气温：' +
                        str(tomorrow_temp_high) + ' 度', font=font18, fill=0)
         drawblack.text((220, 180), '明日将会是 ' +
                        str(tomorrow_wind), font=font18, fill=0)
+
         if int(tomorrow_temp_high)-int(tomorrow_temp_low) >= 12:
             if u'雨' in tomorrow_weather:
                 message = '明日有异常天气，且温差较大'
@@ -277,8 +292,10 @@ try:
                 message = '不妙，明天好像有点热欸'
             if int(tomorrow_temp_low) <= 15:
                 message = '明天好像有点冷'
-            elif int(tomorrow_temp_low) <= 5 or u'雪' in tomorrow_weather or u'雨' in tomorrow_weather:
+            elif int(tomorrow_temp_low) <= 5 or u'雪' in tomorrow_weather:
                 message = '明天的天气有些恶劣呢'
+            elif u'雨' in tomorrow_weather:
+                message = '明天有可能下雨，要注意呢'
             else:
                 message = '明天天气大概率还不错哦！'
         message = ' '*4*int((23-len(message))/2)+message
